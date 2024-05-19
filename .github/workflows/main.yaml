@@ -1,0 +1,25 @@
+name: Trigger CI/CD pipeline
+
+on:
+  push:
+    branches:
+      - dev
+
+
+jobs:
+  CI:
+    # if: ${{ github.event.pull_request.merged }}
+    uses: pramodh003/node-hello/.github/workflows/build.yaml@workflow
+    with:
+      branch_name: ${{ github.ref_name }}
+      commit_msg: ${{ github.event.head_commit.message }}
+    secrets: inherit
+
+  CD:
+    needs: [CI]
+    uses: pramodh003/node-hello/.github/workflows/deploy.yaml@workflow
+    with:
+      version: ${{ needs.CI.outputs.IMAGE_VERSION }}
+      branch_name: ${{ github.ref_name }}
+    secrets: inherit
+      
