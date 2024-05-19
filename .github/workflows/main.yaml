@@ -22,4 +22,4 @@ jobs:
       version: ${{ needs.CI.outputs.IMAGE_VERSION }}
       branch_name: ${{ github.ref_name }}
     secrets: inherit
-    
+  
