@@ -1,0 +1,71 @@
+name: Update helm charts
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      branch_name:
+        required: true
+        type: string
+
+
+env:
+  PAT_USERNAME: ${{ secrets.GITHUBUSERNAME }}
+  PAT_TOKEN: ${{ secrets.GITHUBTOKEN }}
+  VERSION: ${{ inputs.version }}
+  BRANCH_NAME: ${{ inputs.branch_name }}
+  ARGOCD_URL: ${{ secrets.ARGOCDURL }}
+  ARGOCD_USERNAME: ${{ secrets.ARGOCDUSERNAME }}
+  ARGOCD_PASSWORD: ${{ secrets.ARGOCDPASSWORD }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Argo CD Action
+        uses: clowdhaus/argo-cd-action@v1.9.0
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: Pramodh003/node-hello
+          ref: workflow
+          token: ${{ env.PAT_TOKEN }}
+          
+        
+      - name: Updating charts
+        run: |
+          git config --global user.name pramodh003
+          git config --global user.email pramodhbr29@gmail.com
+          ls
+          cd helloworld
+          cat Chart.yaml
+          sed -i "s|appVersion: .*|appVersion: $VERSION-$BRANCH_NAME|g"  Chart.yaml
+          cat Chart.yaml
+          git add .
+          git commit -m "Charts Updated to $VERSION"
+          git push origin -f
+
+      - name: Syncing helm charts with argocd
+        run: |
+          argocd login $ARGOCD_URL --username $ARGOCD_USERNAME --password $ARGOCD_PASSWORD
+          argocd app create nodehello \
+            --repo 'https://github.com/Pramodh003/node-hello.git' \
+            --path helloworld \
+            --dest-server 'https://kubernetes.default.svc' \
+            --dest-namespace default \
+            --sync-policy automated \
+            --revision workflow \
+            --auto-prune \
+            --upsert
+          argocd app sync nodehello --async --force --prune || true
+            
+            
+          
+           
+          
+          
+          
+        

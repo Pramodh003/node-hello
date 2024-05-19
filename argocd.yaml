@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nodhello
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Pramodh003/node-hello.git
+    targetRevision: workflow
+    path: helloworld
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
